@@ -1,3 +1,4 @@
+from unicodedata import name
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 from fastapi import status
@@ -5,8 +6,9 @@ from fastapi import status
 
 from pydantic import BaseModel
 
-from utils import get_value_data_popup, get_value_data_triage, WriterState,help_primary,help_secondary
+from utils import get_value_data_popup, get_value_data_triage, WriterState,help_primary,help_secondary,dead_line
 
+from threading import Timer
 
 class form(BaseModel):
     name: str
@@ -14,6 +16,10 @@ class form(BaseModel):
 
 
 app = FastAPI()
+
+def hello()->None:
+    print("hola")
+    return True
 
 
 @app.get(path="/", status_code=status.HTTP_200_OK, tags=["Home"])
@@ -40,7 +46,9 @@ async def message_popup_second(request: Request):
     raw_data = await request.form()
     value_data = get_value_data_popup(dict(raw_data))
     help_secondary(value_data)
-    WriterState(value_data).add_user()
+    wr = WriterState(value_data)
+    wr.add_user()    
+    Timer(5.0,dead_line).start()
     return {"Reply": "Good"}
 
 
@@ -49,7 +57,15 @@ async def message_popup_second(request: Request):
 )
 async def message_delete(request: Request):
     raw_data = await request.form()
+    
     value_data = get_value_data_triage(dict(raw_data))
     WriterState(value_data).remove_user()
     return {"Reply": "User eliminated"}
+
+@app.post(
+    path="/test"
+)
+def test():
+    print(Timer(5.0,hello).start())
+    return {"reply": "Good"}
 

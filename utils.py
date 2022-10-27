@@ -1,6 +1,5 @@
 import json
-from datetime import datetime
-import pytz
+from datetime import datetime, timedelta
 
 from whatsapp_api.notification import SendMessage
 
@@ -39,15 +38,13 @@ def parse_date(date:str) -> str:
         raise ValueError('No es un mes')
 
 def parse_local_time(time:str, date:str) -> str:
-    local = pytz.timezone("America/Lima")
     time = datetime.strptime(time, '%I:%M %p').strftime('%H:%M:%S')
     full_date = f"{parse_date(date)} {time}"
-    naive = datetime.strptime(full_date, "%Y-%m-%d %H:%M:%S")
-    local_dt = local.localize(naive, is_dst=None)
-    return local_dt.astimezone(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
+    naive = datetime.strptime(full_date, "%Y-%m-%d %H:%M:%S") - timedelta(hours=5)
+    
+    return naive.strftime("%Y-%m-%d %H:%M:%S")
 
 def get_value_data_popup(raw_data:dict) -> dict:
-    print(raw_data.keys())
     value_data = {
         "field_name":raw_data["Nombres"],
         "field_lastname":raw_data["Apellidos"],
@@ -74,9 +71,6 @@ class WriterState():
         with open('./user_state.json', mode='r+') as d:
             user_state = json.load(d)
             for item in user_state["user_notification"]:
-                print(self.value_data["field_numero"])
-                print(item["field_numero"])
-                print(item)
                 if item["field_numero"] == self.value_data["field_numero"]:
                     user_state["user_notification"].remove(item)
                         
@@ -88,6 +82,8 @@ class WriterState():
         with open('./user_state.json', mode='r+') as d:
             user_state = json.load(d)
             user_state_data = {
+                "field_name":self.value_data["field_name"],
+                "field_lastname":self.value_data["field_lastname"],
                 "field_numero":self.value_data["field_numero"],
                 "field_email":self.value_data["field_email"],
                 "field_time":self.value_data["field_time"]
@@ -125,10 +121,10 @@ def help_secondary(value_data):
 
     sender = SendMessage(
         id_whats=str(reader()['ID_WHATSAPP']),
-        acces_token=(reader()['FACEBOOK_ACCESS_TOKEN']),
+        acces_token=(reader()['FACEBOOK_ACCESS_TOKEN']+"4"),
         phone=value_data["field_numero"]
     )
-    print(sender.template(template))    
+    print(sender.template(template))  
     return None
 
 def help_primary(value_data):
@@ -156,6 +152,44 @@ def help_primary(value_data):
         acces_token=(reader()['FACEBOOK_ACCESS_TOKEN']),
         phone=value_data["field_numero"]
     )
-    print(sender.template(template_popup))    
+       
     return None
 
+def dead_line()-> bool:
+    phone_dict = {}
+    with open("user_state.json",'r+') as d:
+        data = json.load(d)["user_notification"]
+        for item in data:
+            t = item["field_time"]
+            res = datetime.strptime(t,"%Y-%m-%d %H:%M:%S")- datetime.now()
+            if  res.total_seconds()/60 <= 0 :
+                phone_dict[f"{item['field_name']} {item['field_lastname']}"] = item["field_numero"]
+
+    for key,val in phone_dict.items():
+   
+        template = {
+            "name": "sample_purchase_feedback",
+            "language": {"code": "es"},
+            "components": [
+                {
+                    "type": "header",
+                    "parameters": [
+                        {
+                            "type": "image",
+                            "image": {
+                                "link": "https://cdn.discordapp.com/attachments/826683941053399091/928700680661782628/unknown.png"
+                            },
+                        }
+                    ],
+                },
+                {"type": "body", "parameters": [{"type": "text", "text": f"{key}"}]},
+            ],
+        }  
+
+        sender = SendMessage(
+            id_whats=str(reader()['ID_WHATSAPP']),
+            acces_token=(reader()['FACEBOOK_ACCESS_TOKEN']),
+            phone=val
+        )
+        print(sender.template(template) ) 
+    return None
