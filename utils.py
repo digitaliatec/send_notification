@@ -47,12 +47,13 @@ def parse_local_time(time:str, date:str) -> str:
     return local_dt.astimezone(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 def get_value_data_popup(raw_data:dict) -> dict:
+    print(raw_data.keys())
     value_data = {
-        "field_name":raw_data["fields[field_name][value]"],
-        "field_lastname":raw_data["fields[field_apellidos][value]"],
-        "field_email":raw_data["fields[field_email][value]"],
-        "field_numero":raw_data["fields[field_numero][value]"],
-        "field_time":parse_local_time(raw_data["meta[time][value]"], raw_data["meta[date][value]"])
+        "field_name":raw_data["Nombres"],
+        "field_lastname":raw_data["Apellidos"],
+        "field_email":raw_data["Correo"],
+        "field_numero":raw_data["Celular"],
+        "field_time":parse_local_time(raw_data["Time"], raw_data["Date"])
     }
     return value_data  
 
@@ -97,7 +98,7 @@ class WriterState():
         return True 
 
 
-def help(value_data):
+def help_secondary(value_data):
     #url = "https://hook.us1.make.com/ekirtpo39os96b5dsjgosp3nx1di1e5b"
     #print(requests.post(url, raw_data).text)
     
@@ -121,11 +122,40 @@ def help(value_data):
         ],
     }
 
+
     sender = SendMessage(
         id_whats=str(reader()['ID_WHATSAPP']),
         acces_token=(reader()['FACEBOOK_ACCESS_TOKEN']),
         phone=value_data["field_numero"]
     )
     print(sender.template(template))    
+    return None
+
+def help_primary(value_data):
+    #url = "https://hook.us1.make.com/ekirtpo39os96b5dsjgosp3nx1di1e5b"
+    #print(requests.post(url, raw_data).text)
+    
+    template_popup = {
+        "messaging_product": "whatsapp",
+        "to": value_data["field_numero"],
+        "type": "template",
+        "template": {
+            "name": "send_notification_popup",
+            "language": {"code": "es"},
+            "components": [
+                {
+                    "type": "body",
+                    "parameters": [{"type": "text", "text": f"{value_data['field_name']}"}],
+                }
+            ],
+        },
+    }
+
+    sender = SendMessage(
+        id_whats=str(reader()['ID_WHATSAPP']),
+        acces_token=(reader()['FACEBOOK_ACCESS_TOKEN']),
+        phone=value_data["field_numero"]
+    )
+    print(sender.template(template_popup))    
     return None
 

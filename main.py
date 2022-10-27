@@ -5,7 +5,7 @@ from fastapi import status
 
 from pydantic import BaseModel
 
-from utils import get_value_data_popup, get_value_data_triage, WriterState,help
+from utils import get_value_data_popup, get_value_data_triage, WriterState,help_primary,help_secondary
 
 
 class form(BaseModel):
@@ -27,11 +27,19 @@ def message():
 
 
 # --------------------------------------------------------
-@app.post(path="/message", status_code=status.HTTP_200_OK, tags=["message"])
-async def message(request: Request):
+@app.post(path="/message_popup", status_code=status.HTTP_200_OK, tags=["message_popup"])
+async def message_popup(request: Request):
     raw_data = await request.form()
     value_data = get_value_data_popup(dict(raw_data))
-    help(raw_data,value_data)
+    help_primary(value_data)
+    WriterState(value_data).add_user()
+    return {"Reply": "Good"}
+
+@app.post(path="/message_popup_second", status_code=status.HTTP_200_OK, tags=["message_popup_second"])
+async def message_popup_second(request: Request):
+    raw_data = await request.form()
+    value_data = get_value_data_popup(dict(raw_data))
+    help_secondary(value_data)
     WriterState(value_data).add_user()
     return {"Reply": "Good"}
 
