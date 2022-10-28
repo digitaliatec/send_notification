@@ -135,7 +135,7 @@ def help_primary(value_data):
         "components": [
             {
                 "type": "body",
-                "parameters": [{"type": "text", "text": "Masami"}],
+                "parameters": [{"type": "text", "text": value_data['field_name']}],
             }
         ],
     }
