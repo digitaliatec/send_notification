@@ -18,5 +18,12 @@ class SendMessage:
         }
         return requests.post(self.url, headers=self.head, json=json_template).json()
     
-
+    def message_text(self,text:str):
+        json_message ={
+            'messaging_product': 'whatsapp',
+            'to':f"51{self.phone}",
+            'type':'text',
+            'text':{"body":text}          
+        }
+        return requests.post(self.url, headers=self.head, json=json_message).json()
     

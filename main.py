@@ -6,9 +6,11 @@ from fastapi import status
 
 from pydantic import BaseModel
 
-from utils import get_value_data_popup, get_value_data_triage, WriterState,help_primary,help_secondary,dead_line
+from utils import get_value_data_popup, get_value_data_triage, WriterState,help_primary,dead_line, help_triaje
 
 from threading import Timer
+
+from whatsapp_api.notification import SendMessage
 
 class form(BaseModel):
     name: str
@@ -39,16 +41,7 @@ async def message_popup(request: Request):
     value_data = get_value_data_popup(dict(raw_data))
     help_primary(value_data)
     WriterState(value_data).add_user()
-    return {"Reply": "Good"}
-
-@app.post(path="/message_popup_second", status_code=status.HTTP_200_OK, tags=["message_popup_second"])
-async def message_popup_second(request: Request):
-    raw_data = await request.form()
-    value_data = get_value_data_popup(dict(raw_data))
-    help_secondary(value_data)
-    wr = WriterState(value_data)
-    wr.add_user()    
-    Timer(5.0,dead_line).start()
+    Timer(900.0,dead_line).start()
     return {"Reply": "Good"}
 
 
@@ -60,12 +53,10 @@ async def message_delete(request: Request):
     
     value_data = get_value_data_triage(dict(raw_data))
     WriterState(value_data).remove_user()
+    help_triaje(value_data)
     return {"Reply": "User eliminated"}
 
-@app.post(
-    path="/test"
-)
-def test():
-    print(Timer(5.0,hello).start())
-    return {"reply": "Good"}
+@app.get(path="/user_state", status_code=status.HTTP_200_OK, tags=["user_state"])
+def message():
+    return FileResponse("user_state.json")
 
