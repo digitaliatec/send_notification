@@ -149,7 +149,7 @@ def help_primary(value_data):
     return None
 
 def help_triaje(value_data):
-    text = "Gracias por completar el *triaje online*🙌\nNuestros especialistas analizarán su caso y estaremos en contacto de 2 a 3 días hábiles 😉"
+    text = "Gracias por completar el *triaje online*🙌\nNuestros especialistas analizarán su caso y estaremos en contacto a la brevedad posible 😉"
     sender = SendMessage(
         id_whats=str(reader()['ID_WHATSAPP']),
         acces_token=(reader()['FACEBOOK_ACCESS_TOKEN']),
